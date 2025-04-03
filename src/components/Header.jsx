@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
-import NavDropdown from 'react-bootstrap/NavDropdown';
 import { Link } from 'react-router-dom';
 
 const Header = () => {
@@ -23,38 +22,51 @@ const Header = () => {
       }
     };
 
-    // Listen for the custom event
     window.addEventListener('userLogin', handleUserLogin);
-
-    // Clean up the event listener
     return () => {
       window.removeEventListener('userLogin', handleUserLogin);
     };
   }, []);
 
+  const handleLogout = () => {
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    setUsername("");
+    window.location.reload();
+  };
+
   return (
-    <>
-      <Navbar bg="dark" data-bs-theme="dark">
-        <Container>
-          <Navbar.Brand href="/home">BOOK MY ROOM</Navbar.Brand>
-          {username && (
-            <Nav className="me-1">
-              <i className="fa-solid fa-user mt-2"></i>
-              <NavDropdown title={username} id="collapsible-nav-dropdown">
-                <Link style={{ textDecoration: 'none' }} to={'/bookings'}>
-                  <NavDropdown.Item href="#action/3.1">MY BOOKINGS</NavDropdown.Item>
-                </Link>
+    <Navbar bg="dark" variant="dark" expand="lg">
+      <Container>
+        <Navbar.Brand className='text-' as={Link} to="/home">BOOK MY ROOM</Navbar.Brand>
+        <Navbar.Toggle aria-controls="basic-navbar-nav" />
+        <Navbar.Collapse id="basic-navbar-nav">
+          <Nav className="ms-auto align-items-center">
+            {username && (
+              <>
                
-                <Link style={{ textDecoration: 'none' }} to={'/login'}>
-                  <NavDropdown.Item href="#action/3.3">LOGOUT</NavDropdown.Item>
-                </Link>
-                <NavDropdown.Divider />
-              </NavDropdown>
-            </Nav>
-          )}
-        </Container>
-      </Navbar>
-    </>
+                <Nav.Link as={Link} to="/bookings" className="text-white me-3">
+                  <i className="fa-solid fa-list me-2"></i>
+                  MY BOOKINGS
+                </Nav.Link>
+                <Nav.Link as={Link} to="/bookings" className="text-white me-3">
+                  <i className="fa-solid fa-phone me-2"></i>
+                  Contact Us
+                </Nav.Link>
+                <Nav.Link onClick={handleLogout} className="text-white me-3">
+                  <i className="fa-solid fa-right-from-bracket me-3"></i>
+                  LOGOUT
+                </Nav.Link>
+                <Nav.Item className="text-white me-2">
+                  <i className="fa-solid fa-user me-2"></i>
+                  {username}
+                </Nav.Item>
+              </>
+            )}
+          </Nav>
+        </Navbar.Collapse>
+      </Container>
+    </Navbar>
   );
 };
 

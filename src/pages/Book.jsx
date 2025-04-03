@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner } from 'react-bootstrap';
-import { useLocation,useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import SERVER_BASE_URL from '../services/serverUrl';
-import axios from 'axios';
 import { bookRoomApi } from '../services/allApi';
 
 const Book = () => {
@@ -14,41 +13,27 @@ const Book = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [alertVariant, setAlertVariant] = useState('success');
 
-  console.log(roomDetails);
-  console.log(fromDate);
-  console.log(toDate);
-
-  // Calculate total days
-  const totalDays = dayjs(toDate, 'DD-MM-YYYY').diff(dayjs(fromDate, 'DD-MM-YYYY'), 'day')+1;
-
-  // Calculate total amount
+  const totalDays = dayjs(toDate, 'DD-MM-YYYY').diff(dayjs(fromDate, 'DD-MM-YYYY'), 'day') + 1;
   const totalAmount = totalDays * roomDetails?.rent;
 
-  // const handlePayNow = () => {
-  //   setIsLoading(true);
-  //   // Simulate payment processing
-  //   setTimeout(() => {
-  //     setIsLoading(false);
-  //     setShowAlert(true);
-  //     setTimeout(() => {
-  //       setShowAlert(false);
-  //       navigate('/home');
-  //     }, 3000); 
-  //   }, 2000); // Simulates a 2-second payment processing time
-  // };
   const currentUser = JSON.parse(sessionStorage.getItem('user')) || {};
-  async function bookRoom() {
+
+  const bookRoom = async () => {
     if (!currentUser.username) {
       console.error("User is not logged in!");
-      alert("Please login to book a room.");
+      setAlertMessage("Please login to book a room.");
+      setAlertVariant('danger');
+      setShowAlert(true);
       setTimeout(() => {
+        setShowAlert(false);
         navigate("/register");
-        
       }, 3000);
       return;
     }
-  
+
     const bookingDetails = {
       room: roomDetails?.name,
       username: currentUser.username,
@@ -58,26 +43,44 @@ const Book = () => {
       totalDays,
       status: "booked",
     };
-  
+
+    setIsLoading(true);
+
     try {
       const result = await bookRoomApi(bookingDetails);
       console.log("Booking Successful:", result.data);
-      alert("Booking Successful. Redirecting to bookings page...");
+
+      setAlertMessage("Booking Successful! You will be redirected to the home page shortly.");
+      setAlertVariant('success');
+      setShowAlert(true);
+
+      // Hide the alert and navigate to home after 3 seconds
       setTimeout(() => {
-        navigate("/bookings");
-      }, 2000);
+        setShowAlert(false);
+        navigate("/home");
+      }, 3000);
     } catch (err) {
       console.error("Error booking room:", err);
+      setAlertMessage("Failed to book the room. Please try again.");
+      setAlertVariant('danger');
+      setShowAlert(true);
+      setIsLoading(false);
     }
-  }
-  
-  
+  };
+
+  useEffect(() => {
+    // Cleanup function to clear alerts when the component unmounts
+    return () => {
+      setShowAlert(false);
+    };
+  }, []);
+
   return (
     <Container className="my-4">
       <Row className="d-flex justify-content-center align-items-center">
         <Col xs={12} md={6}>
           <Card>
-            <Card.Img variant="top" src= {`${SERVER_BASE_URL}/uploads/${roomDetails?.image1}`} />
+            <Card.Img variant="top" src={`${SERVER_BASE_URL}/uploads/${roomDetails?.image1}`} />
           </Card>
         </Col>
         <Col xs={12} md={6}>
@@ -95,15 +98,50 @@ const Book = () => {
                 <strong>Rent Per Day:</strong> {roomDetails?.rent}<br />
                 <strong>Total Amount:</strong> {totalAmount}<br />
               </Card.Text>
-              <Button variant="primary" onClick={bookRoom} >
-                Pay Now
+              <Button variant="primary" onClick={bookRoom} disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" />
+                    <span className="ml-2">Booking...</span>
+                  </>
+                ) : (
+                  "Book Now"
+                )}
               </Button>
             </Card.Body>
           </Card>
         </Col>
       </Row>
-    
-      
+
+      {showAlert && (
+        <div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            animation: 'fadeIn 0.5s',
+          }}
+        >
+          <Alert variant={alertVariant} onClose={() => setShowAlert(false)} dismissible>
+            <Alert.Heading>{alertVariant === 'success' ? 'Booking Successful!' : 'Booking Failed'}</Alert.Heading>
+            <p>{alertMessage}</p>
+          </Alert>
+        </div>
+      )}
+
+      {/* Inline styles for the fade-in animation */}
+      <style>
+        {`
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+            }
+            to {
+              opacity: 1;
+            }
+          }
+        `}
+      </style>
     </Container>
   );
 };

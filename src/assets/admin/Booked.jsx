@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Tabs } from "antd";
 import { Table, Button, Container, Row, Col, Card } from "react-bootstrap";
-import { addRoomApi, homeApi,getUsersApi,getBookingsApi } from "../../services/allApi";
+import { addRoomApi, homeApi,getUsersApi, getAllBookingsApi, } from "../../services/allApi";
 
 
 const { TabPane } = Tabs;
@@ -23,7 +23,7 @@ const Booked = () => {
     })
   }
 const [roomData,setRoomData] = useState([])
-console.log(roomData);
+
 useEffect(() => {
   getRoomDetailHandler();
 
@@ -34,7 +34,6 @@ useEffect(() => {
   const [roomDetails,setRoomDetails] = useState({
     name:"",rent:"",count:"",description:"",type:"",image1:"",image2:"",image3:""
   })
-  console.log(roomDetails);
   const getRoomDetailHandler = async () => {
       try {
         const result = await homeApi();
@@ -78,7 +77,6 @@ useEffect(() => {
               // make api call
               try {
                   const result = await addRoomApi(reqBody, reqHeader);
-                  console.log("API Response:", result);
                   if (result.status === 200) {
                       alert("Room added successfully");
                       setTimeout(() => {
@@ -124,64 +122,74 @@ const [users, setUsers] = useState([]);
 
   // get all bookings'
   const [bookings, setBookings] = useState([]);
+  console.log(bookings);
+  
+
   useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const result = await getBookingsApi();
-        if (result.status === 200) {
-          setBookings(result.data); // Save fetched bookings in state
-        } else {
-          alert("Failed to fetch bookings.");
-        }
-      } catch (error) {
-        console.error("Error fetching bookings:", error);
-        alert("An error occurred while fetching bookings.");
-      }
-    };
-
-    fetchBookings();
+      const fetchBookings = async () => {
+          try {
+              const result = await getAllBookingsApi();
+              console.log(result.data);
+              
+              if (result.status === 200) {
+                  setBookings(result.data);
+              } else {
+                  alert("Failed to fetch bookings.");
+              }
+          } catch (error) {
+              console.error("Error fetching bookings:", error);
+              alert("An error occurred while fetching bookings.");
+          }
+      };
+      fetchBookings();
   }, []);
-
+  
 
   return (
     <div className="mt-3 ml-3 bs">
       <h1 className="text-center">Admin Panel</h1>
       <Tabs defaultActiveKey="1">
-        <TabPane
-          className="text-white"
-          tab={<span style={tabStyle}>Bookings </span>}
-          key="1"
-        >
-          <Container>
-            {" "}
-            <Table striped bordered hover>
-              {" "}
-              <thead>
-                {" "}
+      <TabPane
+    className="text-white"
+    tab={<span style={tabStyle}>Bookings </span>}
+    key="1"
+>
+    <Container>
+        <Table striped bordered hover>
+            <thead>
                 <tr>
-                  {" "}
-                  <th>Username</th> <th>Room</th> <th>FromDate </th>{" "}
-                  <th>To Date</th> <th>Total Days </th><th>Total Amount</th>{" "}
-                </tr>{" "}
-              </thead>{" "}
-              <tbody>
+                    <th>#</th>
+                    <th>Username</th>
+                    
+                    <th>Room Name</th>
+                    
+                  
+                    <th>From Date</th>
+                    <th>To Date</th>
+                    <th>Total Days</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
                 {bookings.map((booking, index) => (
-                  <tr key={index}>
-                    <td>{booking.username}</td> <td>{booking.room}</td>{" "}
-                    <td>{booking.fromDate}</td> <td>{booking.toDate}</td>{" "}
-                    <td>{booking.totalDays}</td> <td>{booking.totalAmount}</td>{" "}
-                  </tr>
+                    <tr key={booking._id}>
+                        <td>{index + 1}</td>
+                        <td>{booking.username || "N/A"}</td>
+                       
+                        <td>{booking.room || "N/A"}</td>
+                        
+                       
+                        <td>{booking.fromDate}</td>
+                        <td>{booking.toDate}</td>
+                        <td>{booking.totaldays}</td>
+                        <td>{booking.totalamount}</td>
+                    </tr>
                 ))}
-{/*                 
-                {" "}
-                <tr>
-                  {}
-                  <td></td> <td></td> <td></td> <td></td> <td></td>{" "}
-                </tr>{" "} */}
-              </tbody>{" "}
-            </Table>{" "}
-          </Container>
-        </TabPane>
+            </tbody>
+        </Table>
+    </Container>
+</TabPane>
+
         <TabPane
           className="text-white"
           tab={<span style={tabStyle}>Add Rooms</span>}

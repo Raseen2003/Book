@@ -33,3 +33,7 @@ export const getBookingsApi = async (username) => {
 export const bookRoomApi = async(reqBody)=>{
   return await commonApi("POST",`${SERVER_BASE_URL}/book-room`,reqBody)
 }
+export const getAllBookingsApi = async () => {
+  return await commonApi("GET",`${SERVER_BASE_URL}/admin-getAllBookings`);
+};
+

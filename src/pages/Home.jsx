@@ -13,6 +13,7 @@ const Home = () => {
   const [viewRoom, setViewRoom] = useState([]);
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
+  const [duplicateRoom, setDuplicateRoom] = useState([]);
 
   const { RangePicker } = DatePicker;
 
@@ -20,7 +21,9 @@ const Home = () => {
     try {
       const result = await homeApi();
       if (result.status === 200) {
+        console.log("API Response:", result.data);  // Debugging API response
         setViewRoom(result.data);
+        setDuplicateRoom(result.data);
       } else {
         alert('An unexpected error occurred. Please try again.');
       }
@@ -29,17 +32,53 @@ const Home = () => {
       alert('An unexpected error occurred. Please try again.');
     }
   };
-
+  
   const filterByDate = (dates) => {
-    if (dates && dates.length === 2) {
-      const formattedCheckIn = dayjs(dates[0]).format('DD-MM-YYYY');
-      const formattedCheckOut = dayjs(dates[1]).format('DD-MM-YYYY');
-      setFromDate(formattedCheckIn);
-      setToDate(formattedCheckOut);
-    } else {
-      console.log('Dates are not properly selected');
+  if (dates && dates.length === 2) {
+    const formattedCheckIn = dayjs(dates[0]).format('DD-MM-YYYY');
+    const formattedCheckOut = dayjs(dates[1]).format('DD-MM-YYYY');
+    setFromDate(formattedCheckIn);
+    setToDate(formattedCheckOut);
+
+    let tempRooms = [];
+
+    for (const room of duplicateRoom) {
+      console.log("Checking room:", room.name, "Booked Dates:", room.bookedDates); // Debugging log
+
+      if (!Array.isArray(room.bookedDates) || room.bookedDates.length === 0) {
+        console.log(`✅ Room ${room.name} is available (No booked dates)`);
+        tempRooms.push(room);
+        continue;
+      }
+
+      let isAvailable = true;
+      for (const bookedDate of room.bookedDates) {
+        const booked = dayjs(bookedDate).format('DD-MM-YYYY');
+        console.log(`🔎 Checking if ${booked} is between ${formattedCheckIn} and ${formattedCheckOut}`);
+
+        if (dayjs(booked).isBetween(dates[0], dates[1], null, '[]')) {
+          console.log(`❌ Room ${room.name} is already booked on ${booked}`);
+          isAvailable = false;
+          break;
+        }
+      }
+
+      if (isAvailable) {
+        console.log(`✅ Room ${room.name} is available for selected dates`);
+        tempRooms.push(room);
+      }
     }
-  };
+
+    console.log("Filtered Available Rooms:", tempRooms);
+    setViewRoom(tempRooms);
+  } else {
+    console.log('⚠️ Dates are not properly selected');
+    setViewRoom(duplicateRoom); // Reset to show all rooms if dates are not properly selected
+  }
+};
+  
+  
+  
 
   return (
     <div style={{ padding: "20px", backgroundColor: "#f8f9fa" }}>
