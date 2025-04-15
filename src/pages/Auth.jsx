@@ -7,7 +7,9 @@ const Auth = ({ insideRegister }) => {
   const [isLogin, setIsLogin] = useState(false);
   const navigate = useNavigate();
   const [userInput, setUserInput] = useState({
-    username: "", email: "", password: ""
+    username: "",
+    email: "",
+    password: "",
   });
 
   const register = async (e) => {
@@ -42,16 +44,27 @@ const Auth = ({ insideRegister }) => {
         const result = await loginApi(userInput);
         if (result.status === 200) {
           sessionStorage.setItem("user", JSON.stringify(result.data.user));
-          sessionStorage.setItem("token",result.data.token);
+          sessionStorage.setItem("token", result.data.token);
           setIsLogin(true);
+  
           // Dispatch custom event
           const loginEvent = new Event('userLogin');
           window.dispatchEvent(loginEvent);
-          setTimeout(() => {
-            navigate("/home");
-            setUserInput({ username: "", email: "", password: "" });
-            setIsLogin(false);
-          }, );
+  
+          // Check if the user is admin
+          if (userInput.email === "admin" && userInput.password === "admin") {
+            setTimeout(() => {
+              navigate("/admin"); // Redirect to admin panel
+              setUserInput({ username: "", email: "", password: "" });
+              setIsLogin(false);
+            }, 1000);
+          } else {
+            setTimeout(() => {
+              navigate("/home"); // Redirect to home for non-admin users
+              setUserInput({ username: "", email: "", password: "" });
+              setIsLogin(false);
+            }, 1000);
+          }
         } else {
           if (result.response.status === 404) {
             alert(result.response.data);
@@ -65,7 +78,6 @@ const Auth = ({ insideRegister }) => {
       alert("Please fill the form completely!!!");
     }
   };
-
   return (
     <Container className="d-flex justify-content-center align-items-center vh-100">
       <Row>
@@ -79,7 +91,7 @@ const Auth = ({ insideRegister }) => {
                     <Form.Label>User Name</Form.Label>
                     <Form.Control
                       value={userInput.username}
-                      onChange={e => setUserInput({ ...userInput, username: e.target.value })}
+                      onChange={(e) => setUserInput({ ...userInput, username: e.target.value })}
                       type="text"
                       placeholder="username"
                       required
@@ -90,7 +102,7 @@ const Auth = ({ insideRegister }) => {
                   <Form.Label>Email address</Form.Label>
                   <Form.Control
                     value={userInput.email}
-                    onChange={e => setUserInput({ ...userInput, email: e.target.value })}
+                    onChange={(e) => setUserInput({ ...userInput, email: e.target.value })}
                     type="email"
                     placeholder="Enter email"
                     required
@@ -100,7 +112,7 @@ const Auth = ({ insideRegister }) => {
                   <Form.Label>Password</Form.Label>
                   <Form.Control
                     value={userInput.password}
-                    onChange={e => setUserInput({ ...userInput, password: e.target.value })}
+                    onChange={(e) => setUserInput({ ...userInput, password: e.target.value })}
                     type="password"
                     placeholder="Password"
                     required
@@ -111,15 +123,19 @@ const Auth = ({ insideRegister }) => {
                     <Button onClick={register} variant="primary" type="submit" className="w-100">
                       Register
                     </Button>
-                    <p>Existing User? Please Click here to <Link to={'/login'}>Login</Link></p>
+                    <p>
+                      Existing User? Please Click here to <Link to={'/login'}>Login</Link>
+                    </p>
                   </div>
                 ) : (
                   <div>
                     <Button onClick={login} variant="primary" type="submit" className="w-100">
                       Login
-                      {isLogin && <Spinner className='ms-2' animation="border" variant="light" />}
+                      {isLogin && <Spinner className="ms-2" animation="border" variant="light" />}
                     </Button>
-                    <p>New User? Please Click here to <Link to={'/register'}>Register</Link></p>
+                    <p>
+                      New User? Please Click here to <Link to={'/register'}>Register</Link>
+                    </p>
                   </div>
                 )}
               </Form>
